@@ -180,7 +180,8 @@ public class PipeBlock extends Block {
     private void removeTowerAbove(Level level, BlockPos brokenPos, Player player, boolean willHarvest) {
         BlockPos.MutableBlockPos cursor = brokenPos.mutable().move(Direction.UP);
         int removedPipes = 0;
-        while (level.getBlockState(cursor).is(this)) {
+        int remainingSteps = level.getHeight();
+        while (remainingSteps-- > 0 && level.getBlockState(cursor).is(this)) {
             level.destroyBlock(cursor, false);
             removedPipes++;
             cursor.move(Direction.UP);
