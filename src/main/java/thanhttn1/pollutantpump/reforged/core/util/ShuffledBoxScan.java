@@ -56,9 +56,10 @@ public final class ShuffledBoxScan {
             return 1;
         }
         int candidate = 1 + random.nextInt(cellCount - 1);
-        // Terminates because 1 is coprime to everything and the candidate cycles through 1..cellCount-1.
+        // Coprime numbers are dense (the gap to the next one is tiny), so this ends after a few steps. Wrapping to 1,
+        // which is coprime to everything, guarantees it terminates.
         while (greatestCommonDivisor(candidate, cellCount) != 1) {
-            candidate = candidate % (cellCount - 1) + 1;
+            candidate = candidate == cellCount - 1 ? 1 : candidate + 1;
         }
         return candidate;
     }
