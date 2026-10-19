@@ -57,7 +57,9 @@ public final class PipeTower {
      */
     public static void notifyPumpBelow(Level level, BlockPos pipePos) {
         BlockPos.MutableBlockPos cursor = pipePos.mutable().move(Direction.DOWN);
-        while (!level.isOutsideBuildHeight(cursor) && isPipe(level.getBlockState(cursor))) {
+        // Defence in depth: a world can never hold more pipes than its height, so the walk is capped to that.
+        int remainingSteps = level.getHeight();
+        while (remainingSteps-- > 0 && !level.isOutsideBuildHeight(cursor) && isPipe(level.getBlockState(cursor))) {
             cursor.move(Direction.DOWN);
         }
         if (level.getBlockEntity(cursor) instanceof PumpBlockEntity pump) {
