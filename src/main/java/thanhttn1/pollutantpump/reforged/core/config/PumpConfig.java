@@ -20,12 +20,12 @@ public final class PumpConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.IntValue PUMP_RADIUS = BUILDER
-            .comment("Horizontal radius (X/Z) around the top pipe from which pollution is sucked")
-            .defineInRange("pumpRadius", 5, 1, 32);
+            .comment("Horizontal radius (X/Z) around the top pipe from which pollution is sucked. The scan cost grows with the volume, so the maximum is kept low")
+            .defineInRange("pumpRadius", 5, 1, 16);
 
     public static final ModConfigSpec.IntValue PUMP_HEIGHT_RANGE = BUILDER
             .comment("Vertical range (Y) above and below the top pipe from which pollution is sucked")
-            .defineInRange("pumpHeightRange", 1, 0, 16);
+            .defineInRange("pumpHeightRange", 1, 0, 8);
 
     public static final ModConfigSpec.IntValue WORK_INTERVAL_TICKS = BUILDER
             .comment("Ticks between two suction attempts (20 ticks = 1 second)")
