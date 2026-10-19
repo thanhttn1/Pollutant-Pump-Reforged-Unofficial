@@ -1,0 +1,71 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="thanhtnt2"
+credits="Original mod 'Pollutant Pump' by bright_spark (GPLv3, https://github.com/thebrightspark/PollutantPump). Built for 'Pollution of the Realms' and 'ForgeEnderTech' by EnderLanky."
+description='''
+An unofficial port of the "Pollutant Pump" mod by bright_spark, port for the NeoForge mod loader and version 1.21.1.
+
+This is a derivative work of the original Pollutant Pump and is licensed under the GNU General Public License v3.0.
+Not affiliated with or endorsed by bright_spark or the authors of Pollution of the Realms.
+'''
+
+[[mixins]]
+config="${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+# Pollution of the Realms provides the pollutant blocks and the Filter Frame the pump feeds.
+[[dependencies.${mod_id}]]
+    modId="adpother"
+    type="required"
+    versionRange="[9.1,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Required by Pollution of the Realms itself.
+[[dependencies.${mod_id}]]
+    modId="forgeendertech"
+    type="required"
+    versionRange="[12.1.4.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Optional compat modules (see integration/compat in the source code).
+[[dependencies.${mod_id}]]
+    modId="jade"
+    type="optional"
+    versionRange="[0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="jei"
+    type="optional"
+    versionRange="[0,)"
+    ordering="AFTER"
+    side="CLIENT"
+
+[[dependencies.${mod_id}]]
+    modId="adchimneys"
+    type="optional"
+    versionRange="[0,)"
+    ordering="AFTER"
+    side="BOTH"

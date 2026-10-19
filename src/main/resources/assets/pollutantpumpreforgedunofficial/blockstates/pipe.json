@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "size=full": { "model": "pollutantpumpreforgedunofficial:block/pipe" },
+    "size=half": { "model": "pollutantpumpreforgedunofficial:block/pipe_half" }
+  }
+}

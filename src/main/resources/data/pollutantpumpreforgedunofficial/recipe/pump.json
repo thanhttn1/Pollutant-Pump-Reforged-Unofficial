@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [ "SDS", "IRI", "SSS" ],
+  "key": {
+    "I": { "tag": "c:ingots/iron" },
+    "R": { "tag": "c:storage_blocks/redstone" },
+    "S": { "tag": "c:stones" },
+    "D": { "tag": "c:gems/diamond" }
+  },
+  "result": { "id": "pollutantpumpreforgedunofficial:pump", "count": 1 }
+}

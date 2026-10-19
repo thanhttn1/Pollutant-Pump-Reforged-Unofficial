@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "pollutantpumpreforgedunofficial:block/block_side",
+    "down": "pollutantpumpreforgedunofficial:block/block_side",
+    "up": "pollutantpumpreforgedunofficial:block/pump_top",
+    "north": "pollutantpumpreforgedunofficial:block/pump_fan",
+    "south": "pollutantpumpreforgedunofficial:block/pump_fan",
+    "west": "pollutantpumpreforgedunofficial:block/block_side",
+    "east": "pollutantpumpreforgedunofficial:block/block_side"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "itemGroup.pollutantpumpreforgedunofficial": "Pollutant Pump Reforged Unofficial",
+  "block.pollutantpumpreforgedunofficial.pump": "Máy Bơm Ô Nhiễm",
+  "block.pollutantpumpreforgedunofficial.pipe": "Ống Bơm",
+  "tooltip.pollutantpumpreforgedunofficial.stored_energy": "Năng lượng đang chứa: %s FE",
+
+  "jei.pollutantpumpreforgedunofficial.pump.info": "Đặt một cột Ống Bơm lên trên máy bơm này và cấp điện (Forge Energy). Cứ vài giây máy sẽ hút một đám ô nhiễm quanh ống trên cùng và đẩy vào Khung Lọc (Filter Frame) kề bên của Pollution of the Realms, hoặc thả ra cạnh máy nếu không khung lọc nào còn chỗ.",
+  "jei.pollutantpumpreforgedunofficial.pipe.info": "Chuột phải vào một ống bằng ống khác để nối dài cột lên trên. Phá một ống sẽ phá luôn mọi ống phía trên nó. Ống trên cùng quyết định vị trí máy bơm hút ô nhiễm.",
+
+  "config.jade.plugin_pollutantpumpreforgedunofficial.pump_status": "Trạng thái Máy Bơm Ô Nhiễm",
+  "pollutantpumpreforgedunofficial.jade.state.working": "Đang hoạt động",
+  "pollutantpumpreforgedunofficial.jade.state.idle": "Nghỉ (thiếu năng lượng)",
+  "pollutantpumpreforgedunofficial.jade.state.no_tower": "Chưa có cột ống phía trên",
+  "pollutantpumpreforgedunofficial.jade.tower_top": "Đỉnh cột ống: %s",
+  "pollutantpumpreforgedunofficial.jade.range": "Phạm vi: %s ngang, %s dọc",
+  "pollutantpumpreforgedunofficial.jade.cost": "Tiêu thụ: %s FE mỗi lần hút",
+
+  "pollutantpumpreforgedunofficial.configuration.title": "Cấu hình Pollutant Pump Reforged Unofficial",
+  "pollutantpumpreforgedunofficial.configuration.section.pollutantpumpreforgedunofficial.common.toml": "Cấu hình Pollutant Pump Reforged Unofficial",
+  "pollutantpumpreforgedunofficial.configuration.section.pollutantpumpreforgedunofficial.common.toml.title": "Cấu hình Pollutant Pump Reforged Unofficial",
+  "pollutantpumpreforgedunofficial.configuration.pumpRadius": "Phạm vi ngang",
+  "pollutantpumpreforgedunofficial.configuration.pumpRadius.tooltip": "Bán kính ngang (X/Z) quanh ống trên cùng mà máy bơm hút ô nhiễm.",
+  "pollutantpumpreforgedunofficial.configuration.pumpHeightRange": "Phạm vi dọc",
+  "pollutantpumpreforgedunofficial.configuration.pumpHeightRange.tooltip": "Phạm vi dọc (Y) phía trên và phía dưới ống trên cùng.",
+  "pollutantpumpreforgedunofficial.configuration.workIntervalTicks": "Chu kỳ làm việc (tick)",
+  "pollutantpumpreforgedunofficial.configuration.workIntervalTicks.tooltip": "Số tick giữa hai lần thử hút. 20 tick = 1 giây.",
+  "pollutantpumpreforgedunofficial.configuration.energyPerOperation": "Năng lượng mỗi lần hút (FE)",
+  "pollutantpumpreforgedunofficial.configuration.energyPerOperation.tooltip": "Năng lượng tiêu thụ mỗi khi máy hút thành công một đám ô nhiễm.",
+  "pollutantpumpreforgedunofficial.configuration.energyCapacity": "Dung lượng năng lượng (FE)",
+  "pollutantpumpreforgedunofficial.configuration.energyCapacity.tooltip": "Lượng năng lượng tối đa máy có thể chứa.",
+  "pollutantpumpreforgedunofficial.configuration.keepEnergyWhenBroken": "Giữ năng lượng khi phá",
+  "pollutantpumpreforgedunofficial.configuration.keepEnergyWhenBroken.tooltip": "Nếu bật, vật phẩm máy bơm rơi ra sẽ nhớ năng lượng đã chứa và khôi phục khi đặt lại.",
+  "pollutantpumpreforgedunofficial.configuration.releaseIntoOpenAir": "Thả ra không khí",
+  "pollutantpumpreforgedunofficial.configuration.releaseIntoOpenAir.tooltip": "Nếu bật, ô nhiễm mà khung lọc kề bên không chứa nổi sẽ được thả vào một ô trống cạnh máy bơm."
+}

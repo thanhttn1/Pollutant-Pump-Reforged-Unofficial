@@ -1,0 +1,35 @@
+{
+  "itemGroup.pollutantpumpreforgedunofficial": "Pollutant Pump Reforged Unofficial",
+  "block.pollutantpumpreforgedunofficial.pump": "Pollutant Pump",
+  "block.pollutantpumpreforgedunofficial.pipe": "Pump Pipe",
+  "tooltip.pollutantpumpreforgedunofficial.stored_energy": "Stored energy: %s FE",
+
+  "jei.pollutantpumpreforgedunofficial.pump.info": "Stand a stack of Pump Pipes on top of this pump and power it with Forge Energy. Every few seconds it sucks one cloud of pollution from around the top pipe and pushes it into an adjacent Filter Frame (Pollution of the Realms), or releases it next to the pump when no filter has room.",
+  "jei.pollutantpumpreforgedunofficial.pipe.info": "Right-click a pipe with another pipe to extend the tower upwards. Breaking a pipe removes every pipe above it. The top pipe decides where the pump sucks pollution from.",
+
+  "config.jade.plugin_pollutantpumpreforgedunofficial.pump_status": "Pollutant Pump status",
+  "pollutantpumpreforgedunofficial.jade.state.working": "Working",
+  "pollutantpumpreforgedunofficial.jade.state.idle": "Idle (not enough energy)",
+  "pollutantpumpreforgedunofficial.jade.state.no_tower": "No pipe tower on top",
+  "pollutantpumpreforgedunofficial.jade.tower_top": "Tower top: %s",
+  "pollutantpumpreforgedunofficial.jade.range": "Range: %s horizontal, %s vertical",
+  "pollutantpumpreforgedunofficial.jade.cost": "Cost: %s FE per operation",
+
+  "pollutantpumpreforgedunofficial.configuration.title": "Pollutant Pump Reforged Unofficial Configs",
+  "pollutantpumpreforgedunofficial.configuration.section.pollutantpumpreforgedunofficial.common.toml": "Pollutant Pump Reforged Unofficial Configs",
+  "pollutantpumpreforgedunofficial.configuration.section.pollutantpumpreforgedunofficial.common.toml.title": "Pollutant Pump Reforged Unofficial Configs",
+  "pollutantpumpreforgedunofficial.configuration.pumpRadius": "Horizontal Range",
+  "pollutantpumpreforgedunofficial.configuration.pumpRadius.tooltip": "Horizontal radius (X/Z) around the top pipe from which pollution is sucked.",
+  "pollutantpumpreforgedunofficial.configuration.pumpHeightRange": "Vertical Range",
+  "pollutantpumpreforgedunofficial.configuration.pumpHeightRange.tooltip": "Vertical range (Y) above and below the top pipe from which pollution is sucked.",
+  "pollutantpumpreforgedunofficial.configuration.workIntervalTicks": "Work Interval (ticks)",
+  "pollutantpumpreforgedunofficial.configuration.workIntervalTicks.tooltip": "Ticks between two suction attempts. 20 ticks = 1 second.",
+  "pollutantpumpreforgedunofficial.configuration.energyPerOperation": "Energy Per Operation (FE)",
+  "pollutantpumpreforgedunofficial.configuration.energyPerOperation.tooltip": "Energy consumed each time the pump successfully sucks one cloud of pollution.",
+  "pollutantpumpreforgedunofficial.configuration.energyCapacity": "Energy Capacity (FE)",
+  "pollutantpumpreforgedunofficial.configuration.energyCapacity.tooltip": "Maximum energy the pump can store.",
+  "pollutantpumpreforgedunofficial.configuration.keepEnergyWhenBroken": "Keep Energy When Broken",
+  "pollutantpumpreforgedunofficial.configuration.keepEnergyWhenBroken.tooltip": "If enabled, the dropped pump item remembers its stored energy and restores it when placed again.",
+  "pollutantpumpreforgedunofficial.configuration.releaseIntoOpenAir": "Release Into Open Air",
+  "pollutantpumpreforgedunofficial.configuration.releaseIntoOpenAir.tooltip": "If enabled, pollution that no adjacent Filter Frame can hold is released into an empty block next to the pump."
+}
