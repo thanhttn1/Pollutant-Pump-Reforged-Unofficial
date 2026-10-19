@@ -16,6 +16,11 @@ Initial unofficial port of **Pollutant Pump** 1.4.0 (bright_spark, GPLv3) to Neo
 * Energy is spent per successful suction (default 40 FE) instead of every tick while powered.
 * The scan area is walked in random order without allocating position lists, and never loads chunks.
 * Pipes are identified by the `pump_pipes` block tag instead of by class.
+* Hardening for busy servers:
+  * The fan model keeps its on/off look for at least 20 ticks, so a pump hovering around "just enough energy" cannot flood nearby players with block updates (the update flag stays "clients only" on purpose).
+  * Energy is written to the chunk at most once per second instead of on every cable insertion.
+  * Tower walks (notify pump, break tower) are capped by the world height.
+  * Config maximums lowered to `pumpRadius` 16 and `pumpHeightRange` 8, which bounds the worst-case scan to about 18,500 positions per attempt instead of about 139,000.
 
 ### Added
 * Addon API: `PumpPollutantSuckedEvent.Pre` / `.Post`, `PumpCapabilities.PUMP_STATUS`, `PumpTags.PUMP_PIPES`.
