@@ -43,7 +43,19 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     /** Safety net: rescan the tower now and then in case a pipe changed without notifying us (e.g. /setblock). */
     private static final int TOWER_RECHECK_INTERVAL_TICKS = 100;
 
-    private final PumpEnergyStorage energyStorage = new PumpEnergyStorage(this::setChanged);
+    /**
+     * Minimum time the fan model keeps its on/off look. Every model switch sends a block update to nearby players
+     * and rebuilds a client chunk section, so a pump hovering around "just enough energy" must not flicker.
+     */
+    private static final int POWERED_STATE_MIN_HOLD_TICKS = 20;
+
+    /**
+     * Energy changes are written to the chunk at most this often. Calling setChanged() on every cable insertion
+     * would mark the chunk dirty and poke neighbouring comparators every single tick.
+     */
+    private static final int ENERGY_SAVE_INTERVAL_TICKS = 20;
+
+    private final PumpEnergyStorage energyStorage = new PumpEnergyStorage(this::markEnergyDirty);
 
     // Spreads periodic rescans of different pumps over different ticks instead of all on the same one.
     private final int towerRecheckOffsetTicks;
@@ -51,7 +63,10 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     @Nullable
     private BlockPos towerTop;
     private boolean towerDirty = true;
+    private boolean energyDirty;
     private long nextWorkGameTime;
+    private long nextPoweredChangeGameTime;
+    private long nextEnergySaveGameTime;
 
     public PumpBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.PUMP.get(), pos, state);
@@ -66,11 +81,12 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
 
     private void tickServer(ServerLevel level) {
         long gameTime = level.getGameTime();
+        saveEnergyIfDue(gameTime);
         refreshTowerIfNeeded(level, gameTime);
 
         BlockPos top = towerTop;
         boolean working = top != null && hasEnergyForOperation();
-        updatePoweredState(level, working);
+        updatePoweredState(level, gameTime, working);
         if (!working || gameTime < nextWorkGameTime) {
             return;
         }
@@ -91,12 +107,30 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
         towerDirty = false;
     }
 
-    private void updatePoweredState(ServerLevel level, boolean working) {
+    /**
+     * Only affects the model. Actual pump work above uses the live {@code working} value, never this block state.
+     * Flag 2 (clients only) is deliberate: flag 3 would additionally fire neighbour updates for a purely visual change.
+     */
+    private void updatePoweredState(ServerLevel level, long gameTime, boolean working) {
         BlockState state = getBlockState();
-        if (state.getValue(PumpBlock.POWERED) == working) {
+        if (state.getValue(PumpBlock.POWERED) == working || gameTime < nextPoweredChangeGameTime) {
             return;
         }
+        nextPoweredChangeGameTime = gameTime + POWERED_STATE_MIN_HOLD_TICKS;
         level.setBlock(worldPosition, state.setValue(PumpBlock.POWERED, working), Block.UPDATE_CLIENTS);
+    }
+
+    private void markEnergyDirty() {
+        this.energyDirty = true;
+    }
+
+    private void saveEnergyIfDue(long gameTime) {
+        if (!energyDirty || gameTime < nextEnergySaveGameTime) {
+            return;
+        }
+        energyDirty = false;
+        nextEnergySaveGameTime = gameTime + ENERGY_SAVE_INTERVAL_TICKS;
+        setChanged();
     }
 
     private boolean hasEnergyForOperation() {
