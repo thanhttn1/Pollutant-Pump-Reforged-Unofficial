@@ -99,13 +99,18 @@ public class PipeBlock extends Block {
         if (direction.getAxis() != Direction.Axis.Y) {
             return state;
         }
-        return withResolvedSize(level, pos, state);
+        // The changed neighbour is already given to us, only the other vertical neighbour needs a lookup.
+        BlockState below = direction == Direction.DOWN ? neighborState : level.getBlockState(pos.below());
+        BlockState above = direction == Direction.UP ? neighborState : level.getBlockState(pos.above());
+        return withResolvedSize(state, below, above);
+    }
+
+    private static BlockState withResolvedSize(BlockGetter level, BlockPos pos, BlockState state) {
+        return withResolvedSize(state, level.getBlockState(pos.below()), level.getBlockState(pos.above()));
     }
 
     /** A segment is the short top piece when it stands on a pipe or pump and has no pipe above it. */
-    private static BlockState withResolvedSize(BlockGetter level, BlockPos pos, BlockState state) {
-        BlockState below = level.getBlockState(pos.below());
-        BlockState above = level.getBlockState(pos.above());
+    private static BlockState withResolvedSize(BlockState state, BlockState below, BlockState above) {
         boolean standsOnTower = PipeTower.isPipe(below) || below.getBlock() instanceof PumpBlock;
         boolean isTop = standsOnTower && !PipeTower.isPipe(above);
         return state.setValue(SIZE, isTop ? PipeSize.HALF : PipeSize.FULL);
