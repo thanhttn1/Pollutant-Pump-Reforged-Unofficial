@@ -31,14 +31,13 @@ public final class ShuffledBoxScan {
         int sizeY = verticalRange * 2 + 1;
         int cellCount = sizeXZ * sizeXZ * sizeY;
         int stride = pickCoprimeStride(random, cellCount);
-        long cellIndex = random.nextInt(cellCount);
+        int cellIndex = random.nextInt(cellCount);
 
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         for (int visited = 0; visited < cellCount; visited++) {
-            int linear = (int) (cellIndex % cellCount);
-            int offsetX = linear % sizeXZ;
-            int offsetZ = (linear / sizeXZ) % sizeXZ;
-            int offsetY = linear / (sizeXZ * sizeXZ);
+            int offsetX = cellIndex % sizeXZ;
+            int offsetZ = (cellIndex / sizeXZ) % sizeXZ;
+            int offsetY = cellIndex / (sizeXZ * sizeXZ);
             cursor.set(
                     center.getX() - horizontalRadius + offsetX,
                     center.getY() - verticalRange + offsetY,
@@ -46,7 +45,11 @@ public final class ShuffledBoxScan {
             if (visitor.test(cursor)) {
                 return true;
             }
+            // The stride is below cellCount, so one subtraction is enough to wrap around.
             cellIndex += stride;
+            if (cellIndex >= cellCount) {
+                cellIndex -= cellCount;
+            }
         }
         return false;
     }
