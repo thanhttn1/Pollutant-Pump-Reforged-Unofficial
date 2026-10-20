@@ -24,6 +24,8 @@
   "pollutantpumpreforgedunofficial.configuration.pumpHeightRange.tooltip": "Vertical range (Y) above and below the top pipe from which pollution is sucked.",
   "pollutantpumpreforgedunofficial.configuration.workIntervalTicks": "Work Interval (ticks)",
   "pollutantpumpreforgedunofficial.configuration.workIntervalTicks.tooltip": "Ticks between two suction attempts. 20 ticks = 1 second.",
+  "pollutantpumpreforgedunofficial.configuration.maxIdleIntervalTicks": "Max Idle Interval (ticks)",
+  "pollutantpumpreforgedunofficial.configuration.maxIdleIntervalTicks.tooltip": "When an attempt finds nothing to suck, the wait before the next attempt doubles up to this many ticks, and resets after a success. Set equal to Work Interval to disable.",
   "pollutantpumpreforgedunofficial.configuration.energyPerOperation": "Energy Per Operation (FE)",
   "pollutantpumpreforgedunofficial.configuration.energyPerOperation.tooltip": "Energy consumed each time the pump successfully sucks one cloud of pollution.",
   "pollutantpumpreforgedunofficial.configuration.energyCapacity": "Energy Capacity (FE)",
