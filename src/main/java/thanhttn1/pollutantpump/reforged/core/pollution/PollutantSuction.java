@@ -29,9 +29,16 @@ import thanhttn1.pollutantpump.reforged.core.util.ShuffledBoxScan;
  * The only class that talks to Pollution of the Realms. If that mod changes its API, this is the single file to fix.
  *
  * <p>One call picks at most one cloud of air pollution around the tower top and moves it into a Filter Frame next to
- * the pump, or back into the open air beside the pump when no filter has room.
+ * the pump, or back into the open air beside the pump when no filter has room. Most attempts end before any block is
+ * read: no possible destination, or no chunk section in the box that can hold pollution.
  */
 public final class PollutantSuction {
+
+    /**
+     * An attempt gives up after this many clouds that could not be delivered or were vetoed by an addon, so a
+     * blocked pump or a vetoing addon cannot make it grind through every cloud in the box.
+     */
+    private static final int MAX_FAILED_CANDIDATES = 8;
 
     private static final Direction[] HORIZONTAL_SIDES = {
             Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
@@ -50,29 +57,74 @@ public final class PollutantSuction {
      * @return true when a cloud was moved, so the caller can charge the energy cost
      */
     public static boolean suckOnePollutant(ServerLevel level, BlockPos pumpPos, BlockPos towerTop) {
-        return ShuffledBoxScan.anyMatch(
-                level.getRandom(),
-                towerTop,
-                PumpConfig.PUMP_RADIUS.getAsInt(),
-                PumpConfig.PUMP_HEIGHT_RANGE.getAsInt(),
-                cursor -> trySuckAt(level, pumpPos, cursor));
+        // Cheapest checks first: without a destination or without pollution nothing can happen.
+        if (!hasPossibleDestination(level, pumpPos)) {
+            return false;
+        }
+        int radius = PumpConfig.PUMP_RADIUS.getAsInt();
+        int heightRange = PumpConfig.PUMP_HEIGHT_RANGE.getAsInt();
+        ScanVolume volume = ScanVolume.resolve(level, towerTop, radius, heightRange);
+        if (!volume.anySectionMayContain(PollutantSuction::isPollutant)) {
+            return false;
+        }
+
+        Attempt attempt = new Attempt(level, pumpPos, volume);
+        ShuffledBoxScan.anyMatch(level.getRandom(), towerTop, radius, heightRange, attempt::visit);
+        return attempt.succeeded;
     }
 
-    private static boolean trySuckAt(ServerLevel level, BlockPos pumpPos, BlockPos.MutableBlockPos cursor) {
-        // Never force-load chunks just to look for pollution.
-        if (!level.isLoaded(cursor)) {
-            return false;
+    private static boolean isPollutant(BlockState state) {
+        return state.getBlock() instanceof AbstractGas;
+    }
+
+    /** True when at least one side of the pump is a Filter Frame, or free for a release. */
+    private static boolean hasPossibleDestination(ServerLevel level, BlockPos pumpPos) {
+        boolean releaseAllowed = PumpConfig.RELEASE_INTO_OPEN_AIR.getAsBoolean();
+        BlockPos.MutableBlockPos sidePos = new BlockPos.MutableBlockPos();
+        for (Direction side : HORIZONTAL_SIDES) {
+            sidePos.setWithOffset(pumpPos, side);
+            if (level.getBlockState(sidePos).getBlock() instanceof FilterFrame) {
+                return true;
+            }
+            if (releaseAllowed && level.isEmptyBlock(sidePos)) {
+                return true;
+            }
         }
-        BlockState state = level.getBlockState(cursor);
-        if (!(state.getBlock() instanceof AbstractGas gas)) {
-            return false;
+        return false;
+    }
+
+    /** State of one scan: walks the shuffled cells until a cloud is delivered or too many candidates failed. */
+    private static final class Attempt {
+        private final ServerLevel level;
+        private final BlockPos pumpPos;
+        private final ScanVolume volume;
+        private int failedCandidates;
+        private boolean succeeded;
+
+        private Attempt(ServerLevel level, BlockPos pumpPos, ScanVolume volume) {
+            this.level = level;
+            this.pumpPos = pumpPos;
+            this.volume = volume;
         }
-        int amount = gas.getCarriedPollutionAmount(state);
-        if (amount <= 0) {
-            return false;
+
+        /** @return true to stop the scan, either because a cloud was delivered or because we give up */
+        private boolean visit(BlockPos.MutableBlockPos cursor) {
+            BlockState state = volume.stateAt(cursor);
+            if (state == null || !(state.getBlock() instanceof AbstractGas gas)) {
+                return false;
+            }
+            int amount = gas.getCarriedPollutionAmount(state);
+            if (amount <= 0) {
+                return false;
+            }
+
+            Transfer transfer = new Transfer(level, pumpPos, cursor.immutable(), state, gas, amount);
+            succeeded = deliverToFilter(transfer) || releaseIntoOpenAir(transfer);
+            if (!succeeded) {
+                failedCandidates++;
+            }
+            return succeeded || failedCandidates >= MAX_FAILED_CANDIDATES;
         }
-        Transfer transfer = new Transfer(level, pumpPos, cursor.immutable(), state, gas, amount);
-        return deliverToFilter(transfer) || releaseIntoOpenAir(transfer);
     }
 
     // ---- destination 1: Filter Frame ----
@@ -122,6 +174,11 @@ public final class PollutantSuction {
         if (!PumpConfig.RELEASE_INTO_OPEN_AIR.getAsBoolean()) {
             return false;
         }
+        // A cloud already standing at one of the outlets would only be shuffled to another outlet: no cleaning,
+        // but energy spent. This also stops a short tower from re-sucking what it released last time.
+        if (isBesidePump(transfer.pumpPos(), transfer.sourcePos())) {
+            return false;
+        }
         ServerLevel level = transfer.level();
         int firstSide = level.getRandom().nextInt(HORIZONTAL_SIDES.length);
         for (int step = 0; step < HORIZONTAL_SIDES.length; step++) {
@@ -140,6 +197,10 @@ public final class PollutantSuction {
             return true;
         }
         return false;
+    }
+
+    private static boolean isBesidePump(BlockPos pumpPos, BlockPos sourcePos) {
+        return sourcePos.getY() == pumpPos.getY() && pumpPos.distManhattan(sourcePos) == 1;
     }
 
     // ---- shared helpers ----
