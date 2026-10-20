@@ -31,6 +31,10 @@ public final class PumpConfig {
             .comment("Ticks between two suction attempts (20 ticks = 1 second)")
             .defineInRange("workIntervalTicks", 60, 1, 24_000);
 
+    public static final ModConfigSpec.IntValue MAX_IDLE_INTERVAL_TICKS = BUILDER
+            .comment("When an attempt finds nothing to suck, the wait before the next attempt doubles, up to this many ticks, and resets after a success. Set it equal to workIntervalTicks to disable")
+            .defineInRange("maxIdleIntervalTicks", 240, 1, 72_000);
+
     public static final ModConfigSpec.IntValue ENERGY_PER_OPERATION = BUILDER
             .comment("Forge Energy consumed each time the pump successfully sucks one cloud of pollution")
             .defineInRange("energyPerOperation", 40, 0, Integer.MAX_VALUE);
