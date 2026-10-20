@@ -50,6 +50,15 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     private static final int POWERED_STATE_MIN_HOLD_TICKS = 20;
 
     /**
+     * The fan keeps spinning this long after the last moment the pump had enough energy. A pump fed by a trickle goes
+     * "just enough, spend, not enough" every cycle; without this grace the model would flip twice per cycle.
+     */
+    private static final int FAN_STOP_GRACE_TICKS = 100;
+
+    /** Caps how often the idle wait doubles: 2^6 times the base interval is far above any sensible ceiling. */
+    private static final int MAX_IDLE_DOUBLINGS = 6;
+
+    /**
      * Energy changes are written to the chunk at most this often. Calling setChanged() on every cable insertion
      * would mark the chunk dirty and poke neighbouring comparators every single tick.
      */
@@ -64,7 +73,10 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     private BlockPos towerTop;
     private boolean towerDirty = true;
     private boolean energyDirty;
+    private boolean workScheduled;
+    private int idleDoublings;
     private long nextWorkGameTime;
+    private long lastWorkingGameTime = Long.MIN_VALUE / 2;
     private long nextPoweredChangeGameTime;
     private long nextEnergySaveGameTime;
 
@@ -86,16 +98,45 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
 
         BlockPos top = towerTop;
         boolean working = top != null && hasEnergyForOperation();
-        updatePoweredState(level, gameTime, working);
-        if (!working || gameTime < nextWorkGameTime) {
+        if (working) {
+            lastWorkingGameTime = gameTime;
+        }
+        boolean fanSpinning = top != null && (working || gameTime - lastWorkingGameTime < FAN_STOP_GRACE_TICKS);
+        updatePoweredState(level, gameTime, fanSpinning);
+        if (!working) {
             return;
         }
 
-        nextWorkGameTime = gameTime + PumpConfig.WORK_INTERVAL_TICKS.getAsInt();
+        if (!workScheduled) {
+            scheduleFirstOperation(level, gameTime);
+        }
+        if (gameTime >= nextWorkGameTime) {
+            runOperation(level, gameTime, top);
+        }
+    }
+
+    /** Random first delay, so pumps that load together do not all scan on the same tick forever after. */
+    private void scheduleFirstOperation(ServerLevel level, long gameTime) {
+        nextWorkGameTime = gameTime + level.getRandom().nextInt(PumpConfig.WORK_INTERVAL_TICKS.getAsInt());
+        workScheduled = true;
+    }
+
+    private void runOperation(ServerLevel level, long gameTime, BlockPos top) {
         // Energy is only spent when something was actually sucked, idle pumps do not drain power.
         if (PollutantSuction.suckOnePollutant(level, worldPosition, top)) {
             energyStorage.consume(PumpConfig.effectiveEnergyPerOperation());
+            idleDoublings = 0;
+        } else if (idleDoublings < MAX_IDLE_DOUBLINGS) {
+            idleDoublings++;
         }
+        nextWorkGameTime = gameTime + nextOperationDelay();
+    }
+
+    /** Base interval doubled once per failed attempt in a row, never above the configured idle ceiling. */
+    private int nextOperationDelay() {
+        int baseInterval = PumpConfig.WORK_INTERVAL_TICKS.getAsInt();
+        int ceiling = Math.max(baseInterval, PumpConfig.MAX_IDLE_INTERVAL_TICKS.getAsInt());
+        return (int) Math.min((long) baseInterval << idleDoublings, ceiling);
     }
 
     private void refreshTowerIfNeeded(ServerLevel level, long gameTime) {
@@ -140,6 +181,8 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     /** Called by pipes when the tower on top of this pump was extended or broken. */
     public void markTowerDirty() {
         this.towerDirty = true;
+        // A changed tower looks at a new area, so do not keep waiting out a long idle delay.
+        this.idleDoublings = 0;
     }
 
     public IEnergyStorage getEnergyStorage() {
