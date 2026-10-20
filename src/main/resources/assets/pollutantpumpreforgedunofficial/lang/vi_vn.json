@@ -24,6 +24,8 @@
   "pollutantpumpreforgedunofficial.configuration.pumpHeightRange.tooltip": "Phạm vi dọc (Y) phía trên và phía dưới ống trên cùng.",
   "pollutantpumpreforgedunofficial.configuration.workIntervalTicks": "Chu kỳ làm việc (tick)",
   "pollutantpumpreforgedunofficial.configuration.workIntervalTicks.tooltip": "Số tick giữa hai lần thử hút. 20 tick = 1 giây.",
+  "pollutantpumpreforgedunofficial.configuration.maxIdleIntervalTicks": "Chu kỳ nghỉ tối đa (tick)",
+  "pollutantpumpreforgedunofficial.configuration.maxIdleIntervalTicks.tooltip": "Khi lần thử không hút được gì, thời gian chờ lần sau sẽ nhân đôi tới mức này và về lại bình thường sau khi hút thành công. Đặt bằng Chu kỳ làm việc để tắt.",
   "pollutantpumpreforgedunofficial.configuration.energyPerOperation": "Năng lượng mỗi lần hút (FE)",
   "pollutantpumpreforgedunofficial.configuration.energyPerOperation.tooltip": "Năng lượng tiêu thụ mỗi khi máy hút thành công một đám ô nhiễm.",
   "pollutantpumpreforgedunofficial.configuration.energyCapacity": "Dung lượng năng lượng (FE)",
