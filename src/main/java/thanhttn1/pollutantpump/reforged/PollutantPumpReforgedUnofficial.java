@@ -20,6 +20,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import thanhttn1.pollutantpump.reforged.api.PollutantPumpApi;
 import thanhttn1.pollutantpump.reforged.core.config.PumpConfig;
+import thanhttn1.pollutantpump.reforged.core.pollution.PollutantSuction;
 import thanhttn1.pollutantpump.reforged.core.registry.ModRegistries;
 import thanhttn1.pollutantpump.reforged.integration.compat.CompatModule;
 
@@ -38,5 +39,7 @@ public final class PollutantPumpReforgedUnofficial {
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
         CompatModule.logActiveModules(LOGGER);
+        // Runs on the main thread after all mods are constructed, still inside the loading screen.
+        event.enqueueWork(() -> LOGGER.debug("Preloaded {} pump classes", PollutantSuction.preload()));
     }
 }

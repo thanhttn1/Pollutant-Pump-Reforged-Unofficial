@@ -181,8 +181,10 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     /** Called by pipes when the tower on top of this pump was extended or broken. */
     public void markTowerDirty() {
         this.towerDirty = true;
-        // A changed tower looks at a new area, so do not keep waiting out a long idle delay.
+        // A changed tower looks at a new area, so do not keep waiting out a long idle delay. Clearing the doubling
+        // counter alone is not enough because the next attempt is already scheduled: reschedule it too.
         this.idleDoublings = 0;
+        this.workScheduled = false;
     }
 
     public IEnergyStorage getEnergyStorage() {

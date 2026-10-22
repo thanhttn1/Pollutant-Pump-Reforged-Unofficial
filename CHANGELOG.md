@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 (2026-10-22)
+
+### Changed
+* A changed tower now also pulls the next suction attempt forward (a random delay within one work interval). Before, only the idle backoff counter was cleared while the already scheduled attempt, up to `maxIdleIntervalTicks` away, stayed in place.
+* The classes used by the first suction (including the Pollution of the Realms ones) are loaded during mod loading instead of in the middle of the first server tick that needs them. If Pollution of the Realms is incompatible, the error now appears at startup instead of inside a block entity tick.
+
 ## 1.0.1 (2026-10-20)
 
 ### Changed
@@ -13,7 +19,7 @@
 * After a failed attempt the wait doubles up to `maxIdleIntervalTicks` (default 240), and resets after a success or when the tower changes.
 * The fan model stays on for 100 ticks after the last moment of sufficient energy, so trickle-fed pumps do not flicker.
 * A cloud standing right beside the pump is no longer re-released to another side (it wasted energy and let short towers re-suck their own output).
-* Config maximums lowered to `pumpRadius` 16 and `pumpHeightRange` 8, which bounds the worst-case scan to about 18,500 positions per attempt instead of about 139,000.
+* Config maximums lowered to `pumpRadius` 16 and `pumpHeightRange` 8, which bounds the worst-case scan to about 18,500 positions per attempt instead of about 139,000. Existing config values above the new maximums are reset to the default (NeoForge logs a warning), so re-check these two keys after updating.
 
 ## 1.0.0 (2026-10-19)
 
@@ -31,11 +37,6 @@ Initial unofficial port of **Pollutant Pump** 1.4.0 (bright_spark, GPLv3) to Neo
 * Energy is spent per successful suction (default 40 FE) instead of every tick while powered.
 * The scan area is walked in random order without allocating position lists, and never loads chunks.
 * Pipes are identified by the `pump_pipes` block tag instead of by class.
-* Hardening for busy servers:
-  * The fan model keeps its on/off look for at least 20 ticks, so a pump hovering around "just enough energy" cannot flood nearby players with block updates (the update flag stays "clients only" on purpose).
-  * Energy is written to the chunk at most once per second instead of on every cable insertion.
-  * Tower walks (notify pump, break tower) are capped by the world height.
-  * Config maximums lowered to `pumpRadius` 16 and `pumpHeightRange` 8, which bounds the worst-case scan to about 18,500 positions per attempt instead of about 139,000.
 
 ### Added
 * Addon API: `PumpPollutantSuckedEvent.Pre` / `.Post`, `PumpCapabilities.PUMP_STATUS`, `PumpTags.PUMP_PIPES`.

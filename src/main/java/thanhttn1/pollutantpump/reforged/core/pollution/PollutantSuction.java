@@ -73,6 +73,22 @@ public final class PollutantSuction {
         return attempt.succeeded;
     }
 
+    /**
+     * Loads (without initialising) the classes the first suction would otherwise load in the middle of a server tick.
+     * Called during mod loading, it moves that one-time cost to the loading screen. It also fails fast with a clear
+     * error if Pollution of the Realms is incompatible, instead of crashing later inside a block entity tick.
+     *
+     * @return how many classes were touched, for the debug log
+     */
+    public static int preload() {
+        Class<?>[] hotClasses = {
+                AbstractGas.class, FilterFrame.class, FilterFrame.BlockTile.class,
+                ScanVolume.class, Attempt.class, Transfer.class,
+                PumpPollutantSuckedEvent.Pre.class, PumpPollutantSuckedEvent.Post.class
+        };
+        return hotClasses.length;
+    }
+
     private static boolean isPollutant(BlockState state) {
         return state.getBlock() instanceof AbstractGas;
     }
