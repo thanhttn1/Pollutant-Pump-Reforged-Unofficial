@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 (2026-11-03)
+
+### Added
+* Sneak-placing a pipe beside pipes links it to all of them, so a pipe placed into the gap of a broken branch rejoins both halves. Sneak + empty-hand right-click on the side of a pipe links or unlinks it with the pipe next to it. The hitbox of a tube-only pipe now ends at the block centre where the model ends.
+
+### Fixed
+* The top and bottom of the junction hub, and the top of a tower pipe that carries an arm, no longer show the black `pump_top` circle that looked like a hole; they use plain metal or the grate. The lowest pipe of a branch going down is closed with the grate as well.
+
 ## 1.1.0 (2026-11-02)
 
 ### Added

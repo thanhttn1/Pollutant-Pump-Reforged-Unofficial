@@ -3,8 +3,7 @@
  "textures": {
   "particle": "pollutantpumpreforgedunofficial:block/block_side",
   "wall": "pollutantpumpreforgedunofficial:block/block_side",
-  "grate": "pollutantpumpreforgedunofficial:block/pipe_grate",
-  "cap": "pollutantpumpreforgedunofficial:block/pump_top"
+  "grate": "pollutantpumpreforgedunofficial:block/pipe_grate"
  },
  "elements": [
   {
@@ -72,7 +71,7 @@
       10,
       4
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -95,7 +94,7 @@
       10,
       4
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -164,7 +163,7 @@
       12,
       5
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -187,7 +186,7 @@
       12,
       5
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -256,7 +255,7 @@
       13,
       6
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -279,7 +278,7 @@
       13,
       6
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -348,7 +347,7 @@
       13,
       7
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -371,7 +370,7 @@
       13,
       7
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -440,7 +439,7 @@
       13,
       8
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -463,7 +462,7 @@
       13,
       8
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -532,7 +531,7 @@
       13,
       9
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -555,7 +554,7 @@
       13,
       9
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -624,7 +623,7 @@
       13,
       10
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -647,7 +646,7 @@
       13,
       10
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -716,7 +715,7 @@
       13,
       11
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -739,7 +738,7 @@
       13,
       11
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -808,7 +807,7 @@
       12,
       12
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -831,7 +830,7 @@
       12,
       12
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -900,7 +899,7 @@
       10,
       13
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },
@@ -923,7 +922,7 @@
       10,
       13
      ],
-     "texture": "#cap"
+     "texture": "#wall"
     }
    }
   },

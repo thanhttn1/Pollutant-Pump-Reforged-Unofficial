@@ -3,8 +3,7 @@
  "textures": {
   "particle": "pollutantpumpreforgedunofficial:block/block_side",
   "wall": "pollutantpumpreforgedunofficial:block/block_side",
-  "grate": "pollutantpumpreforgedunofficial:block/pipe_grate",
-  "cap": "pollutantpumpreforgedunofficial:block/pump_top"
+  "grate": "pollutantpumpreforgedunofficial:block/pipe_grate"
  },
  "elements": [
   {

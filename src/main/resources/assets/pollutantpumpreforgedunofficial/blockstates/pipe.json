@@ -2,25 +2,28 @@
  "multipart": [
   {
    "when": {
-    "AND": [
+    "size": "half"
+   },
+   "apply": {
+    "model": "pollutantpumpreforgedunofficial:block/pipe_half"
+   }
+  },
+  {
+   "when": {
+    "OR": [
      {
-      "size": "full"
+      "size": "full",
+      "up": "true",
+      "down": "true"
      },
      {
-      "OR": [
-       {
-        "up": "true"
-       },
-       {
-        "down": "true"
-       },
-       {
-        "north": "false",
-        "east": "false",
-        "south": "false",
-        "west": "false"
-       }
-      ]
+      "size": "full",
+      "up": "false",
+      "down": "false",
+      "north": "false",
+      "east": "false",
+      "south": "false",
+      "west": "false"
      }
     ]
    },
@@ -30,30 +33,22 @@
   },
   {
    "when": {
-    "AND": [
-     {
-      "size": "half"
-     },
-     {
-      "OR": [
-       {
-        "up": "true"
-       },
-       {
-        "down": "true"
-       },
-       {
-        "north": "false",
-        "east": "false",
-        "south": "false",
-        "west": "false"
-       }
-      ]
-     }
-    ]
+    "size": "full",
+    "up": "false",
+    "down": "true"
    },
    "apply": {
-    "model": "pollutantpumpreforgedunofficial:block/pipe_half"
+    "model": "pollutantpumpreforgedunofficial:block/pipe_top_grate"
+   }
+  },
+  {
+   "when": {
+    "size": "full",
+    "up": "true",
+    "down": "false"
+   },
+   "apply": {
+    "model": "pollutantpumpreforgedunofficial:block/pipe_bottom_grate"
    }
   },
   {

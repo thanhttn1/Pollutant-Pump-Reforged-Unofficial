@@ -5,6 +5,7 @@
  * Derived from "Pollutant Pump" by bright_spark (https://github.com/thebrightspark/PollutantPump), GPLv3.
  * Modified: ported from Kotlin/Forge 1.16.5 to Java 21/NeoForge 1.21.1 (2026-10-19).
  * Modified: horizontal branch arms added to the existing pipe block (2026-11-02, 1.1.0).
+ * Modified: links to every neighbouring pipe when sneak-placed, empty-hand link toggle, hitbox of tube-only pipes (2026-11-03, 1.1.1).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -19,6 +20,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -96,18 +98,24 @@ public class PipeBlock extends Block {
             Block.box(0.0, 4.0, 4.0, 4.0, 12.0, 12.0)
     };
 
-    private static final VoxelShape SHAPE_CORE = Block.box(4.0, 4.0, 4.0, 12.0, 12.0, 12.0);
+    /** Tubes of a pipe without a pillar run from the block edge to the block centre, where a branch tip ends. */
+    private static final VoxelShape[] ARM_LONG_SHAPES = {
+            Block.box(4.0, 4.0, 0.0, 12.0, 12.0, 8.0),
+            Block.box(8.0, 4.0, 4.0, 16.0, 12.0, 12.0),
+            Block.box(4.0, 4.0, 8.0, 12.0, 12.0, 16.0),
+            Block.box(0.0, 4.0, 4.0, 8.0, 12.0, 12.0)
+    };
 
-    /** Shapes of the core-and-arms look, indexed by arm bit mask. */
+    /** Shapes of the tube-only look, indexed by arm bit mask (same shape as the model, so the tip can be clicked). */
     private static final VoxelShape[] CORE_SHAPES = buildCoreShapes();
 
     private static VoxelShape[] buildCoreShapes() {
         VoxelShape[] shapes = new VoxelShape[16];
         for (int mask = 0; mask < 16; mask++) {
-            VoxelShape shape = SHAPE_CORE;
+            VoxelShape shape = Shapes.empty();
             for (int dir = 0; dir < 4; dir++) {
                 if ((mask & (1 << dir)) != 0) {
-                    shape = Shapes.or(shape, ARM_SHAPES[dir]);
+                    shape = Shapes.or(shape, ARM_LONG_SHAPES[dir]);
                 }
             }
             shapes[mask] = shape.optimize();
@@ -196,14 +204,16 @@ public class PipeBlock extends Block {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState placed = defaultBlockState();
-        // Sneak-placing against the side of a pipe links the new pipe to it. The other pipe learns about the link
-        // through updateShape, so no neighbour has to be modified here.
+        // Sneak-placing against the side of a pipe links the new pipe to every pipe beside it, so a pipe put into the
+        // gap of a broken branch rejoins both halves. The other pipes learn about the link through updateShape, so no
+        // neighbour has to be modified here.
         Direction clickedFace = context.getClickedFace();
         if (clickedFace.getAxis() != Direction.Axis.Y && PumpConfig.BRANCH_PIPES_ENABLED.getAsBoolean()) {
-            Direction towardsNeighbour = clickedFace.getOpposite();
-            BlockState neighbour = context.getLevel().getBlockState(context.getClickedPos().relative(towardsNeighbour));
-            if (neighbour.getBlock() instanceof PipeBlock) {
-                placed = placed.setValue(armProperty(towardsNeighbour), true);
+            for (Direction side : Direction.Plane.HORIZONTAL) {
+                BlockState neighbour = context.getLevel().getBlockState(context.getClickedPos().relative(side));
+                if (neighbour.getBlock() instanceof PipeBlock) {
+                    placed = placed.setValue(armProperty(side), true);
+                }
             }
         }
         return withResolvedSize(context.getLevel(), context.getClickedPos(), placed);
@@ -271,6 +281,36 @@ public class PipeBlock extends Block {
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
+    /**
+     * Sneak + empty hand on the side of a pipe that has another pipe next to it on that side links or unlinks the two.
+     * This repairs a branch without breaking anything.
+     */
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                                               BlockHitResult hitResult) {
+        Direction side = hitResult.getDirection();
+        if (!player.isShiftKeyDown() || side.getAxis() == Direction.Axis.Y
+                || !PumpConfig.BRANCH_PIPES_ENABLED.getAsBoolean()) {
+            return InteractionResult.PASS;
+        }
+        BlockPos otherPos = pos.relative(side);
+        BlockState other = level.getBlockState(otherPos);
+        if (!(other.getBlock() instanceof PipeBlock)) {
+            return InteractionResult.PASS;
+        }
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        boolean link = !(state.getValue(armProperty(side)) || other.getValue(armProperty(side.getOpposite())));
+        BlockState newState = withResolvedSize(level, pos, state.setValue(armProperty(side), link));
+        BlockState newOther = withResolvedSize(level, otherPos, other.setValue(armProperty(side.getOpposite()), link));
+        level.setBlock(pos, newState, Block.UPDATE_ALL);
+        level.setBlock(otherPos, newOther, Block.UPDATE_ALL);
+        BranchNetwork.notifyPumps(level, pos);
+        BranchNetwork.notifyPumps(level, otherPos);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
