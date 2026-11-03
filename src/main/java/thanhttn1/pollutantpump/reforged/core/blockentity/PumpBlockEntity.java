@@ -4,6 +4,7 @@
  *
  * Derived from "Pollutant Pump" by bright_spark (https://github.com/thebrightspark/PollutantPump), GPLv3.
  * Modified: ported from Kotlin/Forge 1.16.5 to Java 21/NeoForge 1.21.1 (2026-10-19).
+ * Modified: suction rotates over the tower top and branch pipe ends (2026-11-02, 1.1.0).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -30,6 +31,8 @@ import thanhttn1.pollutantpump.reforged.core.energy.PumpEnergyStorage;
 import thanhttn1.pollutantpump.reforged.core.pollution.PollutantSuction;
 import thanhttn1.pollutantpump.reforged.core.registry.ModBlockEntities;
 import thanhttn1.pollutantpump.reforged.core.registry.ModDataComponents;
+import thanhttn1.pollutantpump.reforged.core.tower.BranchNetwork;
+import thanhttn1.pollutantpump.reforged.core.tower.HeadRotation;
 import thanhttn1.pollutantpump.reforged.core.tower.PipeTower;
 
 /**
@@ -75,6 +78,9 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     private boolean energyDirty;
     private boolean workScheduled;
     private int idleDoublings;
+    // Open ends of branch pipes, refreshed together with the tower. Empty for a plain tower.
+    private BranchNetwork.Head[] branchHeads = BranchNetwork.NO_HEADS;
+    private final HeadRotation headRotation = new HeadRotation();
     private long nextWorkGameTime;
     private long lastWorkingGameTime = Long.MIN_VALUE / 2;
     private long nextPoweredChangeGameTime;
@@ -122,11 +128,29 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
     }
 
     private void runOperation(ServerLevel level, long gameTime, BlockPos top) {
+        // Slot 0 is the tower top, slots 1.. are the open ends of branches (dearer, see branchEnergyPerOperation).
+        BranchNetwork.Head[] heads = branchHeads;
+        int slots = heads.length + 1;
+        int slot = headRotation.pick(slots);
+        BlockPos center = top;
+        int cost = PumpConfig.effectiveEnergyPerOperation();
+        if (slot > 0) {
+            BranchNetwork.Head head = heads[slot - 1];
+            center = head.pos();
+            cost = PumpConfig.branchEnergyPerOperation(head.pipeCount());
+            if (energyStorage.getEnergyStored() < cost) {
+                // Not enough for this dearer slot yet: skip it without counting a failure, the next slot may be cheaper.
+                nextWorkGameTime = gameTime + nextOperationDelay();
+                return;
+            }
+        }
         // Energy is only spent when something was actually sucked, idle pumps do not drain power.
-        if (PollutantSuction.suckOnePollutant(level, worldPosition, top)) {
-            energyStorage.consume(PumpConfig.effectiveEnergyPerOperation());
+        if (PollutantSuction.suckOnePollutant(level, worldPosition, center)) {
+            energyStorage.consume(cost);
             idleDoublings = 0;
-        } else if (idleDoublings < MAX_IDLE_DOUBLINGS) {
+            headRotation.onSuccess();
+        } else if (headRotation.onFailure(slots) && idleDoublings < MAX_IDLE_DOUBLINGS) {
+            // Only back off once every slot came up empty in a row, so one dead branch cannot slow the others.
             idleDoublings++;
         }
         nextWorkGameTime = gameTime + nextOperationDelay();
@@ -145,6 +169,7 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
             return;
         }
         towerTop = PipeTower.findTop(level, worldPosition);
+        branchHeads = towerTop == null ? BranchNetwork.NO_HEADS : BranchNetwork.findHeads(level, worldPosition, towerTop);
         towerDirty = false;
     }
 
@@ -184,6 +209,7 @@ public class PumpBlockEntity extends BlockEntity implements IPumpStatus {
         // A changed tower looks at a new area, so do not keep waiting out a long idle delay. Clearing the doubling
         // counter alone is not enough because the next attempt is already scheduled: reschedule it too.
         this.idleDoublings = 0;
+        this.headRotation.reset();
         this.workScheduled = false;
     }
 

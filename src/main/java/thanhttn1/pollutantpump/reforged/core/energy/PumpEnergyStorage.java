@@ -4,6 +4,7 @@
  *
  * Derived from "Pollutant Pump" by bright_spark (https://github.com/thebrightspark/PollutantPump), GPLv3.
  * Modified: ported from Kotlin/Forge 1.16.5 to Java 21/NeoForge 1.21.1 (2026-10-19).
+ * Modified: stored energy is clamped to a lowered capacity (2026-11-02, 1.1.0).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -47,7 +48,8 @@ public final class PumpEnergyStorage implements IEnergyStorage {
 
     @Override
     public int getEnergyStored() {
-        return storedEnergy;
+        // The capacity is read live from the config, so lowering it must not leave readers with more than the max.
+        return Math.min(storedEnergy, getMaxEnergyStored());
     }
 
     @Override

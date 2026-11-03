@@ -26,6 +26,17 @@ Pollutant Pump is an addon for **Pollution of the Realms** that adds a powered p
 2. Power the pump with Forge Energy.
 3. Every `workIntervalTicks` the pump looks for one cloud of air pollution inside the box around the **top pipe**, and moves it into a Filter Frame touching the pump. If no filter has room the cloud is released into an empty block next to the pump (can be disabled).
 
+### Branch pipes (1.1.0)
+
+A tower only sucks around its **top** pipe, so a pump cannot reach pollution on a lower floor. To fix that, pipes can be linked sideways:
+
+1. **Sneak** and right-click the **side** of any pipe with another pipe: the new pipe is placed next to it and the two are linked (the pipe model grows an arm). Without sneaking, right-click still extends the tower upwards as before.
+2. Continue the branch the same way (sideways), or right-click a branch pipe without sneaking to stack pipes upwards on that branch.
+3. Every **open end** of a branch is an extra suction point. The pump rotates over the tower top and the branch ends, one suction per attempt, so the scan cost per attempt stays the same.
+4. A suction at a branch end costs more energy: `branchEnergyPercent` of `energyPerOperation` (default 200 %) plus `branchEnergyPercentPerPipe` for every further pipe.
+
+Pipes placed side by side without sneaking are **not** linked. Branches are rescanned immediately when a pipe with an arm is placed or removed; stacking pipes on a branch is picked up within 5 seconds. Pipes in unloaded chunks are never loaded for this.
+
 Compared with the 1.16.5 original this port also fixes a few things: a pump without pipes no longer scans around the world origin, pipes are returned when a tower is broken in survival, and the pump no longer lets cables drain its energy.
 
 ## Configuration
@@ -41,6 +52,11 @@ Compared with the 1.16.5 original this port also fixes a few things: a pump with
 | `energyCapacity` | 1000 | FE the pump can store |
 | `keepEnergyWhenBroken` | false | Dropped pump item keeps its energy (data component `stored_energy`) |
 | `releaseIntoOpenAir` | true | Release pollution that no filter can hold next to the pump |
+| `branchPipesEnabled` | true | Linked side pipes form branches with extra suction points |
+| `maxBranchPipes` | 64 | Most branch pipes a pump looks at |
+| `branchEnergyPercent` | 200 | Cost at the nearest branch end, as % of `energyPerOperation` |
+| `branchEnergyPercentPerPipe` | 10 | Extra % per further branch pipe |
+| `strictDependencyCheck` | true | Stop loading with a clear message if Pollution of the Realms lost a method this mod calls |
 
 ## Addon API
 
@@ -65,6 +81,13 @@ NeoForge.EVENT_BUS.addListener((PumpPollutantSuckedEvent.Pre event) -> {
 | Jade | Tooltip with pump state, tower top, range and cost (Jade Addons is **not** needed) |
 | JEI | Info pages for the pump and the pipe |
 | Advanced Chimneys | `adchimneys:pipe` is an optional entry of the `pump_pipes` tag, so its pipes can extend a pump tower |
+
+### Other energy systems (verified in the jars, no adapter needed)
+
+* **Modern Industrialization 2.5.11**: its cables push into any block that offers Forge Energy through the bundled GrandPower bridge, at `forgeEnergyPerEu` FE per EU (MI default 10). With defaults one operation (40 FE) is 4 EU and the buffer (1000 FE) is 100 EU.
+* **NTM: Decentralized Edition 1.0.0-beta.13 (mod id `hbm`)**: its `ForeignEnergyBridge` treats any block with an insertable FE capability as a low-priority receiver and converts with its own HE/FE ratio config.
+
+Both only need the pump's existing FE capability, which accepts insertion and never extraction. Adding a second adapter would register a competing capability provider, so none is shipped. These two points come from reading the jars, not from running the game.
 
 To add another mod: add a constant to `CompatModule`, then put its code in its own sub-package.
 

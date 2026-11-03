@@ -4,6 +4,7 @@
  *
  * Derived from "Pollutant Pump" by bright_spark (https://github.com/thebrightspark/PollutantPump), GPLv3.
  * Modified: ported from Kotlin/Forge 1.16.5 to Java 21/NeoForge 1.21.1 (2026-10-19).
+ * Modified: runs the Pollution of the Realms binding check (2026-11-02, 1.1.0).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -23,6 +24,7 @@ import thanhttn1.pollutantpump.reforged.core.config.PumpConfig;
 import thanhttn1.pollutantpump.reforged.core.pollution.PollutantSuction;
 import thanhttn1.pollutantpump.reforged.core.registry.ModRegistries;
 import thanhttn1.pollutantpump.reforged.integration.compat.CompatModule;
+import thanhttn1.pollutantpump.reforged.integration.compat.potr.PotrBindingGuard;
 
 /** Mod entry point. Wiring only: all behaviour lives in the {@code core} and {@code integration} packages. */
 @Mod(PollutantPumpReforgedUnofficial.MODID)
@@ -40,6 +42,18 @@ public final class PollutantPumpReforgedUnofficial {
     private void onCommonSetup(FMLCommonSetupEvent event) {
         CompatModule.logActiveModules(LOGGER);
         // Runs on the main thread after all mods are constructed, still inside the loading screen.
-        event.enqueueWork(() -> LOGGER.debug("Preloaded {} pump classes", PollutantSuction.preload()));
+        event.enqueueWork(() -> {
+            PotrBindingGuard.verify(LOGGER, strictDependencyCheck());
+            LOGGER.debug("Preloaded {} pump classes", PollutantSuction.preload());
+        });
+    }
+
+    /** Defaults to strict when the config cannot be read yet. */
+    private static boolean strictDependencyCheck() {
+        try {
+            return PumpConfig.STRICT_DEPENDENCY_CHECK.getAsBoolean();
+        } catch (IllegalStateException configNotLoaded) {
+            return true;
+        }
     }
 }

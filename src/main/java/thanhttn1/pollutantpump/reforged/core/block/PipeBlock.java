@@ -4,6 +4,7 @@
  *
  * Derived from "Pollutant Pump" by bright_spark (https://github.com/thebrightspark/PollutantPump), GPLv3.
  * Modified: ported from Kotlin/Forge 1.16.5 to Java 21/NeoForge 1.21.1 (2026-10-19).
+ * Modified: horizontal branch arms added to the existing pipe block (2026-11-02, 1.1.0).
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -30,16 +31,25 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import thanhttn1.pollutantpump.reforged.core.config.PumpConfig;
+import thanhttn1.pollutantpump.reforged.core.tower.BranchNetwork;
 import thanhttn1.pollutantpump.reforged.core.tower.PipeTower;
 
 /**
  * One segment of a pump's pipe tower. The topmost segment is drawn half height with a grate, and right-clicking any
  * segment with another pipe extends the tower upwards.
+ *
+ * <p>Since 1.1.0 a pipe can also carry up to four horizontal arms. Sneak-placing a pipe against the side of another
+ * pipe links the two, so a branch can leave the tower at any height and reach another floor. Arms are plain block
+ * state flags: a pipe without arms behaves exactly like before.
  */
 public class PipeBlock extends Block {
 
@@ -66,9 +76,101 @@ public class PipeBlock extends Block {
     private static final VoxelShape SHAPE_FULL = Block.box(4.0, 0.0, 4.0, 12.0, 16.0, 12.0);
     private static final VoxelShape SHAPE_HALF = Block.box(4.0, 0.0, 4.0, 12.0, 8.0, 12.0);
 
+    /** Arm flags in direction index order: north, east, south, west (same order as the branch graph search). */
+    public static final BooleanProperty NORTH = BlockStateProperties.NORTH;
+    public static final BooleanProperty EAST = BlockStateProperties.EAST;
+    public static final BooleanProperty SOUTH = BlockStateProperties.SOUTH;
+    public static final BooleanProperty WEST = BlockStateProperties.WEST;
+
+    /**
+     * Vertical links, only used to pick the model: a pipe with a pipe above or a pipe/pump below is drawn as the
+     * tower pillar, a pipe with arms and no vertical link is drawn as a small core with arms (like a cable).
+     */
+    public static final BooleanProperty UP = BlockStateProperties.UP;
+    public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
+
+    private static final VoxelShape[] ARM_SHAPES = {
+            Block.box(4.0, 4.0, 0.0, 12.0, 12.0, 4.0),
+            Block.box(12.0, 4.0, 4.0, 16.0, 12.0, 12.0),
+            Block.box(4.0, 4.0, 12.0, 12.0, 12.0, 16.0),
+            Block.box(0.0, 4.0, 4.0, 4.0, 12.0, 12.0)
+    };
+
+    private static final VoxelShape SHAPE_CORE = Block.box(4.0, 4.0, 4.0, 12.0, 12.0, 12.0);
+
+    /** Shapes of the core-and-arms look, indexed by arm bit mask. */
+    private static final VoxelShape[] CORE_SHAPES = buildCoreShapes();
+
+    private static VoxelShape[] buildCoreShapes() {
+        VoxelShape[] shapes = new VoxelShape[16];
+        for (int mask = 0; mask < 16; mask++) {
+            VoxelShape shape = SHAPE_CORE;
+            for (int dir = 0; dir < 4; dir++) {
+                if ((mask & (1 << dir)) != 0) {
+                    shape = Shapes.or(shape, ARM_SHAPES[dir]);
+                }
+            }
+            shapes[mask] = shape.optimize();
+        }
+        return shapes;
+    }
+
+    /** Every shape is built once: index = size ordinal * 16 + arm bit mask. */
+    private static final VoxelShape[] SHAPES = buildShapes();
+
+    private static VoxelShape[] buildShapes() {
+        VoxelShape[] shapes = new VoxelShape[PipeSize.values().length * 16];
+        for (PipeSize size : PipeSize.values()) {
+            for (int mask = 0; mask < 16; mask++) {
+                VoxelShape shape = size == PipeSize.FULL ? SHAPE_FULL : SHAPE_HALF;
+                for (int dir = 0; dir < 4; dir++) {
+                    if ((mask & (1 << dir)) != 0) {
+                        shape = Shapes.or(shape, ARM_SHAPES[dir]);
+                    }
+                }
+                shapes[size.ordinal() * 16 + mask] = shape.optimize();
+            }
+        }
+        return shapes;
+    }
+
+    /** @return the arm flag for a horizontal direction */
+    public static BooleanProperty armProperty(Direction direction) {
+        return switch (direction) {
+            case NORTH -> NORTH;
+            case EAST -> EAST;
+            case SOUTH -> SOUTH;
+            case WEST -> WEST;
+            default -> throw new IllegalArgumentException("Pipes only have horizontal arms: " + direction);
+        };
+    }
+
+    private static int armMask(BlockState state) {
+        int mask = 0;
+        if (state.getValue(NORTH)) {
+            mask |= 1;
+        }
+        if (state.getValue(EAST)) {
+            mask |= 2;
+        }
+        if (state.getValue(SOUTH)) {
+            mask |= 4;
+        }
+        if (state.getValue(WEST)) {
+            mask |= 8;
+        }
+        return mask;
+    }
+
+    private static boolean hasAnyArm(BlockState state) {
+        return armMask(state) != 0;
+    }
+
     public PipeBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(SIZE, PipeSize.FULL));
+        registerDefaultState(stateDefinition.any().setValue(SIZE, PipeSize.FULL)
+                .setValue(NORTH, false).setValue(EAST, false).setValue(SOUTH, false).setValue(WEST, false)
+                .setValue(UP, false).setValue(DOWN, false));
     }
 
     @Override
@@ -78,31 +180,60 @@ public class PipeBlock extends Block {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(SIZE);
+        builder.add(SIZE, NORTH, EAST, SOUTH, WEST, UP, DOWN);
     }
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(SIZE) == PipeSize.FULL ? SHAPE_FULL : SHAPE_HALF;
+        int mask = armMask(state);
+        if (mask != 0 && !state.getValue(UP) && !state.getValue(DOWN)) {
+            return CORE_SHAPES[mask];
+        }
+        return SHAPES[state.getValue(SIZE).ordinal() * 16 + mask];
     }
 
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return withResolvedSize(context.getLevel(), context.getClickedPos(), defaultBlockState());
+        BlockState placed = defaultBlockState();
+        // Sneak-placing against the side of a pipe links the new pipe to it. The other pipe learns about the link
+        // through updateShape, so no neighbour has to be modified here.
+        Direction clickedFace = context.getClickedFace();
+        if (clickedFace.getAxis() != Direction.Axis.Y && PumpConfig.BRANCH_PIPES_ENABLED.getAsBoolean()) {
+            Direction towardsNeighbour = clickedFace.getOpposite();
+            BlockState neighbour = context.getLevel().getBlockState(context.getClickedPos().relative(towardsNeighbour));
+            if (neighbour.getBlock() instanceof PipeBlock) {
+                placed = placed.setValue(armProperty(towardsNeighbour), true);
+            }
+        }
+        return withResolvedSize(context.getLevel(), context.getClickedPos(), placed);
     }
 
     @Override
     protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
                                      LevelAccessor level, BlockPos pos, BlockPos neighborPos) {
-        // Only vertical neighbours decide whether this segment is the grated top.
         if (direction.getAxis() != Direction.Axis.Y) {
-            return state;
+            BlockState withArm = withResolvedArm(state, direction, neighborState);
+            // A pipe with arms is never the short grated top, so the size is re-checked when an arm appears.
+            return withArm == state ? state : withResolvedSize(level, pos, withArm);
         }
+        // Vertical neighbours decide whether this segment is the grated top.
         // The changed neighbour is already given to us, only the other vertical neighbour needs a lookup.
         BlockState below = direction == Direction.DOWN ? neighborState : level.getBlockState(pos.below());
         BlockState above = direction == Direction.UP ? neighborState : level.getBlockState(pos.above());
         return withResolvedSize(state, below, above);
+    }
+
+    /**
+     * An arm stays while the pipe next to it exists, and appears when that pipe points an arm at us. It never appears
+     * on its own, so placing two pipes side by side without sneaking does not link them.
+     */
+    private static BlockState withResolvedArm(BlockState state, Direction direction, BlockState neighborState) {
+        BooleanProperty arm = armProperty(direction);
+        boolean current = state.getValue(arm);
+        boolean connected = neighborState.getBlock() instanceof PipeBlock
+                && (current || neighborState.getValue(armProperty(direction.getOpposite())));
+        return connected == current ? state : state.setValue(arm, connected);
     }
 
     private static BlockState withResolvedSize(BlockGetter level, BlockPos pos, BlockState state) {
@@ -112,8 +243,10 @@ public class PipeBlock extends Block {
     /** A segment is the short top piece when it stands on a pipe or pump and has no pipe above it. */
     private static BlockState withResolvedSize(BlockState state, BlockState below, BlockState above) {
         boolean standsOnTower = PipeTower.isPipe(below) || below.getBlock() instanceof PumpBlock;
-        boolean isTop = standsOnTower && !PipeTower.isPipe(above);
-        return state.setValue(SIZE, isTop ? PipeSize.HALF : PipeSize.FULL);
+        boolean isTop = standsOnTower && !PipeTower.isPipe(above) && armMask(state) == 0;
+        return state.setValue(SIZE, isTop ? PipeSize.HALF : PipeSize.FULL)
+                .setValue(UP, PipeTower.isPipe(above))
+                .setValue(DOWN, standsOnTower);
     }
 
     @Override
@@ -124,12 +257,18 @@ public class PipeBlock extends Block {
             return;
         }
         PipeTower.notifyPumpBelow(level, pos);
+        if (hasAnyArm(state)) {
+            BranchNetwork.notifyPumps(level, pos);
+        }
     }
 
     @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!level.isClientSide && !state.is(newState.getBlock())) {
             PipeTower.notifyPumpBelow(level, pos);
+            if (hasAnyArm(state)) {
+                BranchNetwork.notifyPumpsAround(level, pos);
+            }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);
     }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0 (2026-11-02)
+
+### Added
+* **Branch pipes**: sneak-placing a pipe against the side of another pipe links them. Open ends of branches become extra suction points (rotating with the tower top), so one pump can pump several floors. Costs `branchEnergyPercent` (200 %) of `energyPerOperation` plus `branchEnergyPercentPerPipe` (10 %) per further pipe. New config keys `branchPipesEnabled`, `maxBranchPipes`, `branchEnergyPercent`, `branchEnergyPercentPerPipe`. The pipe block gained four boolean block state properties (`north`, `east`, `south`, `west`); existing pipes load unchanged.
+* Startup check (`PotrBindingGuard`) that the installed Pollution of the Realms still has the methods this mod calls. It stops loading with a readable message, or only logs when `strictDependencyCheck` is false.
+
+### Changed
+* The required mod ranges now have an upper bound (`potr_version_range`, `forgeendertech_version_range` in `gradle.properties`).
+* The pump backs off only after the tower top and every branch end came up empty in a row.
+* The pump energy reading is clamped to the capacity, so lowering `energyCapacity` no longer shows more than the maximum.
+
+### Removed
+* The empty Mixin config and its `[[mixins]]` entry.
+
+### Notes
+* Modern Industrialization and NTM Decentralized Edition already feed the pump through their own Forge Energy bridges; see the README.
+
 ## 1.0.2 (2026-10-22)
 
 ### Changed

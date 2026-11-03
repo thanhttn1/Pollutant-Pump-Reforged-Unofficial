@@ -1,0 +1,195 @@
+{
+ "parent": "block/block",
+ "textures": {
+  "particle": "pollutantpumpreforgedunofficial:block/block_side",
+  "wall": "pollutantpumpreforgedunofficial:block/block_side",
+  "grate": "pollutantpumpreforgedunofficial:block/pipe_grate",
+  "cap": "pollutantpumpreforgedunofficial:block/pump_top"
+ },
+ "elements": [
+  {
+   "from": [
+    6.02,
+    4.04,
+    8
+   ],
+   "to": [
+    9.98,
+    5.03,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      6,
+      11,
+      10,
+      12
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    5.03,
+    5.03,
+    8
+   ],
+   "to": [
+    10.97,
+    6.02,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      5,
+      10,
+      11,
+      11
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    4.04,
+    6.02,
+    8
+   ],
+   "to": [
+    11.96,
+    7.01,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      4,
+      9,
+      12,
+      10
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    4.04,
+    7.01,
+    8
+   ],
+   "to": [
+    11.96,
+    8.0,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      4,
+      8,
+      12,
+      9
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    4.04,
+    8.0,
+    8
+   ],
+   "to": [
+    11.96,
+    8.99,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      4,
+      7,
+      12,
+      8
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    4.04,
+    8.99,
+    8
+   ],
+   "to": [
+    11.96,
+    9.98,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      4,
+      6,
+      12,
+      7
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    5.03,
+    9.98,
+    8
+   ],
+   "to": [
+    10.97,
+    10.97,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      5,
+      5,
+      11,
+      6
+     ],
+     "texture": "#grate"
+    }
+   }
+  },
+  {
+   "from": [
+    6.02,
+    10.97,
+    8
+   ],
+   "to": [
+    9.98,
+    11.96,
+    8
+   ],
+   "faces": {
+    "south": {
+     "uv": [
+      6,
+      4,
+      10,
+      5
+     ],
+     "texture": "#grate"
+    }
+   }
+  }
+ ]
+}
